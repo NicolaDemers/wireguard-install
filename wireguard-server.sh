@@ -99,7 +99,7 @@ if [ ! -f "$WG_CONFIG" ]; then
       if [ "$INTERACTIVE" == "yes" ]; then
         read -rp "System public IPV4 address is $SERVER_HOST_V4. Is that correct? [y/n]: " -e -i "$IPV4_SUGGESTION" CONFIRM
         if [ "$CONFIRM" == "n" ]; then
-          echo "Aborted. Use environment variable SERVER_HOST_V4 to set the correct public IP address."
+          read -rp "Host Name: " SERVER_HOST_V4
         fi
       fi
     fi
