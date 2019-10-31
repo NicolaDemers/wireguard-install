@@ -1,6 +1,11 @@
 #!/bin/bash
 # Secure WireGuard For CentOS, Debian, Ubuntu, Raspbian, Arch, Fedora, Redhat
 
+LOCAL_NETWORK_W_MASK="10.9.0.0/24"
+LOCAL_NETWORK_WO_MASK="10.9.0.0"
+LOCAL_INTERFACE_W_MASK="10.9.0.1/24"
+LOCAL_INTERFACE_WO_MASK="10.9.0.1"
+
 # Check Root Function
 function root-check() {
   if [[ "$EUID" -ne 0 ]]; then
@@ -58,7 +63,7 @@ if [ ! -f "$WG_CONFIG" ]; then
   # Yes or No For Questions
   INTERACTIVE=${INTERACTIVE:-yes}
   # Private Subnet Ipv4
-  PRIVATE_SUBNET_V4=${PRIVATE_SUBNET_V4:-"10.8.0.0/24"}
+  PRIVATE_SUBNET_V4=${PRIVATE_SUBNET_V4:-"$LOCAL_NETWORK_W_MASK"}
   # Private Subnet Mask IPv4
   PRIVATE_SUBNET_MASK_V4=$(echo "$PRIVATE_SUBNET_V4" | cut -d "/" -f 2)
   # IPv4 Getaway
@@ -391,7 +396,7 @@ function install-wireguard-server() {
     # Install Unbound
     apt-get install unbound unbound-host e2fsprogs -y
     # Set Config
-    echo 'server:
+    echo `server:
     num-threads: 4
     verbosity: 1
     root-hints: "/etc/unbound/root.hints"
@@ -400,8 +405,8 @@ function install-wireguard-server() {
     interface: ::0
     max-udp-size: 3072
     access-control: 0.0.0.0/0                 refuse
-    access-control: 10.8.0.0/24               allow
-    private-address: 10.8.0.0/24
+    access-control: $LOCAL_NETWORK_W_MASK               allow
+    private-address: $LOCAL_NETWORK_W_MASK
     hide-identity: yes
     hide-version: yes
     harden-glue: yes
@@ -413,7 +418,7 @@ function install-wireguard-server() {
     cache-max-ttl: 14400
     prefetch: yes
     qname-minimisation: yes
-    prefetch-key: yes' >/etc/unbound/unbound.conf
+    prefetch-key: yes` >/etc/unbound/unbound.conf
     # Apply settings
     systemctl stop systemd-resolved
     systemctl disable systemd-resolved
@@ -421,7 +426,7 @@ function install-wireguard-server() {
     # Install Unbound
     apt-get install unbound unbound-host e2fsprogs -y
     # Set Config
-    echo 'server:
+    echo `server:
     num-threads: 4
     verbosity: 1
     root-hints: "/etc/unbound/root.hints"
@@ -430,8 +435,8 @@ function install-wireguard-server() {
     interface: ::0
     max-udp-size: 3072
     access-control: 0.0.0.0/0                 refuse
-    access-control: 10.8.0.0/24               allow
-    private-address: 10.8.0.0/24
+    access-control: $LOCAL_NETWORK_W_MASK               allow
+    private-address: $LOCAL_NETWORK_W_MASK
     hide-identity: yes
     hide-version: yes
     harden-glue: yes
@@ -443,12 +448,12 @@ function install-wireguard-server() {
     cache-max-ttl: 14400
     prefetch: yes
     qname-minimisation: yes
-    prefetch-key: yes' >/etc/unbound/unbound.conf
+    prefetch-key: yes` >/etc/unbound/unbound.conf
   elif [ "$DISTRO" == "Raspbian" ]; then
     # Install Unbound
     apt-get install unbound unbound-host e2fsprogs -y
     # Set Config
-    echo 'server:
+    echo `server:
     num-threads: 4
     verbosity: 1
     root-hints: "/etc/unbound/root.hints"
@@ -457,8 +462,8 @@ function install-wireguard-server() {
     interface: ::0
     max-udp-size: 3072
     access-control: 0.0.0.0/0                 refuse
-    access-control: 10.8.0.0/24               allow
-    private-address: 10.8.0.0/24
+    access-control: $LOCAL_NETWORK_W_MASK               allow
+    private-address: $LOCAL_NETWORK_W_MASK
     hide-identity: yes
     hide-version: yes
     harden-glue: yes
@@ -470,34 +475,34 @@ function install-wireguard-server() {
     cache-max-ttl: 14400
     prefetch: yes
     qname-minimisation: yes
-    prefetch-key: yes' >/etc/unbound/unbound.conf
+    prefetch-key: yes` >/etc/unbound/unbound.conf
   elif [[ "$DISTRO" == "CentOS" ]]; then
     # Install Unbound
     yum install unbound unbound-libs -y
-    sed -i 's|# interface: 0.0.0.0$|interface: 10.8.0.1|' /etc/unbound/unbound.conf
-    sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.8.0.1/24 allow|' /etc/unbound/unbound.conf
+    sed -i "s|# interface: 0.0.0.0$|interface: $LOCAL_INTERFACE_WO_MASK|" /etc/unbound/unbound.conf
+    sed -i "s|# access-control: 127.0.0.0/8 allow|access-control: $LOCAL_INTERFACE_W_MASK allow|" /etc/unbound/unbound.conf
     sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
     sed -i 's|# hide-version: no|hide-version: yes|' /etc/unbound/unbound.conf
     sed -i 's|use-caps-for-id: no|use-caps-for-id: yes|' /etc/unbound/unbound.conf
   elif [[ "$DISTRO" == "Fedora" ]]; then
     dnf install unbound unbound-host -y
-    sed -i 's|# interface: 0.0.0.0$|interface: 10.8.0.1|' /etc/unbound/unbound.conf
-    sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.8.0.1/24 allow|' /etc/unbound/unbound.conf
+    sed -i "s|# interface: 0.0.0.0$|interface: $LOCAL_INTERFACE_WO_MASK|" /etc/unbound/unbound.conf
+    sed -i "s|# access-control: 127.0.0.0/8 allow|access-control: $LOCAL_INTERFACE_W_MASK allow|" /etc/unbound/unbound.conf
     sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
     sed -i 's|# hide-version: no|hide-version: yes|' /etc/unbound/unbound.conf
     sed -i 's|use-caps-for-id: no|use-caps-for-id: yes|' /etc/unbound/unbound.conf
   elif [[ "$DISTRO" == "Arch" ]]; then
     pacman -S unbound unbound-host
     mv /etc/unbound/unbound.conf /etc/unbound/unbound.conf.old
-    echo 'server:
+    echo `server:
     use-syslog: yes
     do-daemonize: no
     username: "unbound"
     directory: "/etc/unbound"
     trust-anchor-file: trusted-key.key
     root-hints: root.hints
-    interface: 10.8.0.0
-    access-control: 10.8.0.0 allow
+    interface: $LOCAL_NETWORK_WO_MASK
+    access-control: $LOCAL_NETWORK_WO_MASK allow
     port: 53
     num-threads: 2
     use-caps-for-id: yes
@@ -505,12 +510,12 @@ function install-wireguard-server() {
     hide-identity: yes
     hide-version: yes
     qname-minimisation: yes
-    prefetch: yes' >/etc/unbound/unbound.conf
+    prefetch: yes` >/etc/unbound/unbound.conf
   fi
     # Set DNS Root Servers
     wget -O /etc/unbound/root.hints https://www.internic.net/domain/named.cache
     # Setting Client DNS For Unbound On WireGuard
-    CLIENT_DNS="10.8.0.1"
+    CLIENT_DNS="$LOCAL_INTERFACE_WO_MASK"
     # Allow the modification of the file
     chattr -i /etc/resolv.conf
     # Disable previous DNS servers
@@ -539,7 +544,7 @@ fi
     curl -sSL https://install.pi-hole.net | bash
   fi
     # Set Client DNS
-    CLIENT_DNS="10.8.0.1"
+    CLIENT_DNS="$LOCAL_INTERFACE_WO_MASK"
 }
 
   # Run The Function
