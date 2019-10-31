@@ -100,6 +100,7 @@ if [ ! -f "$WG_CONFIG" ]; then
         read -rp "System public IPV4 address is $SERVER_HOST_V4. Is that correct? [y/n]: " -e -i "$IPV4_SUGGESTION" CONFIRM
         if [ "$CONFIRM" == "n" ]; then
           read -rp "Host Name: " SERVER_HOST_V4
+          echo "Use environment variable SERVER_HOST_V4 to set the correct public IP address."
         fi
       fi
     fi
