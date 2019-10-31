@@ -163,11 +163,11 @@ if [ ! -f "$WG_CONFIG" ]; then
     echo "   1) 51820 (Recommended)"
     echo "   2) Custom (Advanced)"
     echo "   3) Random [1024-65535]"
-    until [[ "$PORT_CHOICE" =~ ^[1-3]$ ]]; do
-      read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
+    until [[ "$LISTEN_PORT_CHOICE" =~ ^[1-3]$ ]]; do
+      read -rp "Port choice [1-3]: " -e -i 1 LISTEN_PORT_CHOICE
     done
     # Apply port response
-    case $PORT_CHOICE in
+    case $LISTEN_PORT_CHOICE in
     1)
       LISTEN_PORT="51820"
       ;;
@@ -192,11 +192,11 @@ if [ ! -f "$WG_CONFIG" ]; then
     echo "   1) 51820"
     echo "   2) Custom (Advanced)"
     echo "   3) Random [1024-65535]"
-    until [[ "$PORT_CHOICE" =~ ^[1-3]$ ]]; do
-      read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
+    until [[ "$HOST_PORT_CHOICE" =~ ^[1-3]$ ]]; do
+      read -rp "Port choice [1-3]: " -e -i 1 HOST_PORT_CHOICE
     done
     # Apply port response
-    case $PORT_CHOICE in
+    case $HOST_PORT_CHOICE in
     1)
       SERVER_PORT="51820"
       ;;
