@@ -157,10 +157,39 @@ if [ ! -f "$WG_CONFIG" ]; then
   # Run The Function
   server-pub-nic
 
-  # Determine host port
-  function set-port() {
+  # Determine listen port
+  function set-listen-port() {
     echo "What port do you want WireGuard server to listen to?"
     echo "   1) 51820 (Recommended)"
+    echo "   2) Custom (Advanced)"
+    echo "   3) Random [1024-65535]"
+    until [[ "$PORT_CHOICE" =~ ^[1-3]$ ]]; do
+      read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
+    done
+    # Apply port response
+    case $PORT_CHOICE in
+    1)
+      LISTEN_PORT="51820"
+      ;;
+    2)
+      until [[ "$LISTEN_PORT" =~ ^[0-9]+$ ]] && [ "$LISTEN_PORT" -ge 1 ] && [ "$LISTEN_PORT" -le 65535 ]; do
+        read -rp "Custom port [1-65535]: " -e -i 51820 LISTEN_PORT
+      done
+      ;;
+    3)
+      LISTEN_PORT=$(shuf -i1024-65535 -n1)
+      echo "Random Port: $LISTEN_PORT"
+      ;;
+    esac
+  }
+
+  # Set Listen Port
+  set-listen-port
+
+  # Determine host port
+  function set-host-port() {
+    echo "What port is open to the internet?"
+    echo "   1) 51820"
     echo "   2) Custom (Advanced)"
     echo "   3) Random [1024-65535]"
     until [[ "$PORT_CHOICE" =~ ^[1-3]$ ]]; do
@@ -183,8 +212,8 @@ if [ ! -f "$WG_CONFIG" ]; then
     esac
   }
 
-  # Set Port
-  set-port
+  # Set Host Port
+  set-host-port
 
   # Determine Keepalive interval.
   function nat-keepalive() {
@@ -575,7 +604,7 @@ fi
     echo "# $PRIVATE_SUBNET_V4 $PRIVATE_SUBNET_V6 $SERVER_HOST:$SERVER_PORT $SERVER_PUBKEY $CLIENT_DNS $MTU_CHOICE $NAT_CHOICE $CLIENT_ALLOWED_IP
 [Interface]
 Address = $GATEWAY_ADDRESS_V4/$PRIVATE_SUBNET_MASK_V4,$GATEWAY_ADDRESS_V6/$PRIVATE_SUBNET_MASK_V6
-ListenPort = $SERVER_PORT
+ListenPort = $LISTEN_PORT
 PrivateKey = $SERVER_PRIVKEY
 PostUp = iptables -A FORWARD -i $WIREGUARD_PUB_NIC -j ACCEPT; iptables -t nat -A POSTROUTING -o $SERVER_PUB_NIC -j MASQUERADE; ip6tables -A FORWARD -i $WIREGUARD_PUB_NIC -j ACCEPT; ip6tables -t nat -A POSTROUTING -o $SERVER_PUB_NIC -j MASQUERADE; iptables -A INPUT -s $PRIVATE_SUBNET_V4 -p udp -m udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
 PostDown = iptables -D FORWARD -i $WIREGUARD_PUB_NIC -j ACCEPT; iptables -t nat -D POSTROUTING -o $SERVER_PUB_NIC -j MASQUERADE; ip6tables -D FORWARD -i $WIREGUARD_PUB_NIC -j ACCEPT; ip6tables -t nat -D POSTROUTING -o $SERVER_PUB_NIC -j MASQUERADE; iptables -D INPUT -s $PRIVATE_SUBNET_V4 -p udp -m udp --dport 53 -m conntrack --ctstate NEW -j ACCEPT
@@ -688,7 +717,7 @@ MTU = $MTU_CHOICE
 PrivateKey = $CLIENT_PRIVKEY
 [Peer]
 AllowedIPs = $CLIENT_ALLOWED_IP
-Endpoint = $SERVER_HOST$SERVER_PORT
+Endpoint = $SERVER_HOST:$SERVER_PORT
 PersistentKeepalive = $NAT_CHOICE
 PresharedKey = $PRESHARED_KEY
 PublicKey = $SERVER_PUBKEY" >"/etc/wireguard/clients"/"$NEW_CLIENT_NAME"-$WIREGUARD_PUB_NIC.conf
