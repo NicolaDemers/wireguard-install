@@ -623,6 +623,7 @@ Address = $CLIENT_ADDRESS_V4/$PRIVATE_SUBNET_MASK_V4,$CLIENT_ADDRESS_V6/$PRIVATE
 DNS = $CLIENT_DNS
 MTU = $MTU_CHOICE
 PrivateKey = $CLIENT_PRIVKEY
+ListenPort = $LISTEN_PORT
 [Peer]
 AllowedIPs = $CLIENT_ALLOWED_IP
 Endpoint = $SERVER_HOST:$SERVER_PORT
@@ -704,6 +705,7 @@ else
       LASTIP6=$(grep "/128" $WG_CONFIG | tail -n1 | awk '{print $3}' | cut -d "/" -f 1 | cut -d "." -f 4)
       CLIENT_ADDRESS_V4="${PRIVATE_SUBNET_V4::-4}$((LASTIP4 + 1))"
       CLIENT_ADDRESS_V6="${PRIVATE_SUBNET_V6::-4}$((LASTIP6 + 1))"
+      LISTEN_PORT=$(head -n4 $WG_CONFIG | awk 'FNR==4{print $3}')
       echo "# $NEW_CLIENT_NAME start
 [Peer]
 PublicKey = $CLIENT_PUBKEY
@@ -716,9 +718,10 @@ Address = $CLIENT_ADDRESS_V4/$PRIVATE_SUBNET_MASK_V4,$CLIENT_ADDRESS_V6/$PRIVATE
 DNS = $CLIENT_DNS
 MTU = $MTU_CHOICE
 PrivateKey = $CLIENT_PRIVKEY
+ListenPort = $LISTEN_PORT
 [Peer]
 AllowedIPs = $CLIENT_ALLOWED_IP
-Endpoint = $SERVER_HOST:$SERVER_PORT
+Endpoint = $SERVER_HOST
 PersistentKeepalive = $NAT_CHOICE
 PresharedKey = $PRESHARED_KEY
 PublicKey = $SERVER_PUBKEY" >"/etc/wireguard/clients"/"$NEW_CLIENT_NAME"-$WIREGUARD_PUB_NIC.conf
